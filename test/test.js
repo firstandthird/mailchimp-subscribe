@@ -1,12 +1,21 @@
 const tape = require('tape');
+const Subscribe = require('../');
 
-test('subscribe', function (t) {
+tape('initalize', (t) => {
+  t.plan(1);
+  const subscriber = new Subscribe(process.env.MAILCHIMP_API_KEY);
+  t.ok(subscriber, `a mailchimp subscriber can be initialized with MAILCHIMP_API_KEY = ${process.env.MAILCHIMP_API_KEY}`);
+});
+
+tape('subscribe', (t) => {
   t.plan(2);
+  const subscriber = new Subscribe(process.env.MAILCHIMP_API_KEY);
+  subscriber.subscribe(process.env.MAILCHIMP_LIST_ID, 'clyde@example.com', { bananas: true }, { var1: 'yes', var2: 'no' }, (err, results) => {
+    t.notOk(err);
+    t.equal(typeof results, 'object');
+    console.log(results)
+  });
 
-  t.equal(typeof Date.now, 'function');
-  var start = Date.now();
-
-  setTimeout(function () {
-    t.equal(Date.now() - start, 100);
-  }, 100);
+  tape('updateUser', (t) => {
+  });
 });

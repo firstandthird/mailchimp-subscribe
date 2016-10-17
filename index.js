@@ -17,10 +17,12 @@ class MailchimpSubscribe {
       status_if_new: status,
       merge_fields: mergeVars
     };
-
     const endpoint = `${this.baseUrl}/lists/${listId}/members/${emailHash}`;
-    wreck.put(url, {
+    wreck.put(endpoint, {
       json: true,
+      headers: {
+        Authorization: `Basic ${new Buffer(`mailchimp_user:${this.apiKey}`).toString('base64')}`
+      },
       payload: JSON.stringify(data)
     }, (err, response, json) => {
       if (err) {
@@ -36,4 +38,3 @@ class MailchimpSubscribe {
 }
 
 module.exports = MailchimpSubscribe;
-
