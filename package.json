@@ -1,0 +1,29 @@
+{
+  "name": "mailchimp-subscribe",
+  "version": "0.0.1",
+  "description": "Library to subscribe or update users in mailchimp",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/firstandthird/mailchimp-subscribe.git"
+  },
+  "keywords": [
+    "mailchimp"
+  ],
+  "author": "Greg Allen <code@firstandthird.com> (http://firstandthird.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/firstandthird/mailchimp-subscribe/issues"
+  },
+  "homepage": "https://github.com/firstandthird/mailchimp-subscribe#readme",
+  "dependencies": {
+    "tape": "^4.6.2",
+    "wreck": "^10.0.0"
+  },
+  "eslintConfig": {
+    "extends": "firstandthird"
+  }
+}
