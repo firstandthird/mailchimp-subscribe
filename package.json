@@ -29,7 +29,7 @@
   "devDependencies": {
     "eslint": "^3.4.0",
     "eslint-config-firstandthird": "^3.0.2",
-    "eslint-plugin-import": "^1.14.0",
+    "eslint-plugin-import": "^2.2.0",
     "tap-spec": "^4.1.1"
   }
 }
