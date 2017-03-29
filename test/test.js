@@ -16,6 +16,31 @@ test('initalize', (t) => {
   t.ok(subscriber, `a mailchimp subscriber can be initialized with API_KEY = ${process.env.API_KEY}`);
 });
 
+test('list interests', (t) => {
+  t.plan(2);
+  const subscriber = new Subscribe(process.env.API_KEY);
+  subscriber.listInterests(process.env.LIST_ID, (err, results) => {
+    t.equal(err, null, 'does not error when fetching list of interests');
+    t.ok(results.categories, 'returns a list of 0 or more categories');
+    t.end();
+  });
+});
+
+test('list information about an interest category', (t) => {
+  t.plan(2);
+  const subscriber = new Subscribe(process.env.API_KEY);
+  subscriber.listInterests(process.env.LIST_ID, (err, results) => {
+    const category = results.categories[0];
+    if (category) {
+      subscriber.interestInfo(process.env.LIST_ID, category.id, (err, info) => {
+        t.equal(err, null, 'does not error when fetching interest info');
+        t.ok(info.title);
+        t.end();
+      });
+    }
+  });
+});
+
 test('subscribe', (t) => {
   t.plan(6);
   const subscriber = new Subscribe(process.env.API_KEY);

@@ -26,6 +26,14 @@ class MailchimpSubscribe {
     });
   }
 
+  listInterests(listId, done) {
+    this.request(`/lists/${listId}/interest-categories`, 'GET', {}, done);
+  }
+
+  interestInfo(listId, interestCategoryId, done) {
+    this.request(`/lists/${listId}/interest-categories/${interestCategoryId}`, 'GET', {}, done);
+  }
+
   updateUser(listId, email, interests, mergeVars, status, done) {
     const emailHash = crypto.createHash('md5').update(email).digest('hex');
 
