@@ -34,7 +34,7 @@ test('list information about an interest category', (t) => {
     if (category) {
       subscriber.interestInfo(process.env.LIST_ID, category.id, (err, info) => {
         t.equal(err, null, 'does not error when fetching interest info');
-        t.ok(info.title);
+        t.ok(info.title, 'returns the title and other parts of the interests cateogry');
         t.end();
       });
     }
