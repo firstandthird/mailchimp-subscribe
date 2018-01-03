@@ -21,7 +21,7 @@ test('throws error on error', async (t) => {
   const subscriber = new Subscribe(process.env.API_KEY);
   const result = subscriber.request(`/lists/${process.env.LIST_ID}/members/zxyey`, 'PUT', { email_address: 'nothing' });
   t.rejects(result, {}, 'Does not throw a good error');
-})
+});
 
 test('list interests', async (t) => {
   const subscriber = new Subscribe(process.env.API_KEY);
@@ -47,6 +47,19 @@ test('get all interests for a list', async (t) => {
   const subscriber = new Subscribe(process.env.API_KEY);
   const interests = await subscriber.listAllInterests(process.env.LIST_ID);
   t.ok(interests, 'returns one or more interests without error');
+});
+
+test('allows string interests to be parsed', async (t) => {
+  t.plan(2);
+  const subscriber = new Subscribe(process.env.API_KEY);
+  const allInterests = await subscriber.listAllInterests(process.env.LIST_ID);
+  const intArr = [];
+  const intIdOne = allInterests[0].id;
+  intArr.push(allInterests[0].name);
+  intArr.push(allInterests[2].name);
+  const interestObj = await subscriber.parseInterests(process.env.LIST_ID, intArr.join(','));
+  t.ok(interestObj, 'returns a formatted interest obj');
+  t.equal(interestObj[intIdOne], true);
 });
 
 test('subscribe', async (t) => {
