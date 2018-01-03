@@ -50,16 +50,11 @@ test('get all interests for a list', async (t) => {
 });
 
 test('allows string interests to be parsed', async (t) => {
-  t.plan(2);
+  t.plan(1);
   const subscriber = new Subscribe(process.env.API_KEY);
-  const allInterests = await subscriber.listAllInterests(process.env.LIST_ID);
-  const intArr = [];
-  const intIdOne = allInterests[0].id;
-  intArr.push(allInterests[0].name);
-  intArr.push(allInterests[2].name);
+  const intArr = ['Dummy'];
   const interestObj = await subscriber.parseInterests(process.env.LIST_ID, intArr.join(','));
   t.ok(interestObj, 'returns a formatted interest obj');
-  t.equal(interestObj[intIdOne], true);
 });
 
 test('subscribe', async (t) => {
