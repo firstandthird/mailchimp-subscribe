@@ -16,6 +16,13 @@ test('initalize', (t) => {
   t.end();
 });
 
+test('throws error on error', async (t) => {
+  t.plan(1);
+  const subscriber = new Subscribe(process.env.API_KEY);
+  const result = subscriber.request(`/lists/${process.env.LIST_ID}/members/zxyey`, 'PUT', { email_address: 'nothing' });
+  t.rejects(result, {}, 'Does not throw a good error');
+})
+
 test('list interests', async (t) => {
   const subscriber = new Subscribe(process.env.API_KEY);
   const results = await subscriber.listInterestCategories(process.env.LIST_ID);
