@@ -1,10 +1,12 @@
 'use strict';
 const wreck = require('wreck');
 const crypto = require('crypto');
+
 class MailchimpSubscribe {
   constructor(apiKey) {
     this.apiKey = apiKey;
     this.baseUrl = `https://${apiKey.split('-')[1]}.api.mailchimp.com/3.0`;
+    this.interestsCache = [];
   }
 
   async request(endpoint, method, data) {
@@ -36,12 +38,21 @@ class MailchimpSubscribe {
   }
 
   async listAllInterests(listId) {
+    if (this.interestsCache[listId]) {
+      return this.interestsCache[listId];
+    }
+
     const categories = await this.listInterestCategories(listId);
     let interests = [];
-    for(let cat of categories.categories) {
-      const interestResponse = await this.listInterestsByCategory(cat.list_id, cat.id);
-      interests = interests.concat(interestResponse.interests);
-    }
+    const promiseArr = [];
+    categories.categories.forEach(cat => {
+      promiseArr.push( this.listInterestsByCategory(cat.list_id, cat.id));
+    });
+    const results = await Promise.all(promiseArr);
+
+    results.forEach(res => {
+      interests = interests.concat(res.interests);
+    });
 
     return interests;
   }
