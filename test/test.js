@@ -1,4 +1,4 @@
-const test = require('tape');
+const test = require('tap').test;
 const Subscribe = require('../');
 
 if (!process.env.API_KEY || !process.env.LIST_ID) {
@@ -11,66 +11,65 @@ const randomEmail = function() {
 }
 
 test('initalize', (t) => {
-  t.plan(1);
   const subscriber = new Subscribe(process.env.API_KEY);
   t.ok(subscriber, `a mailchimp subscriber can be initialized with API_KEY = ${process.env.API_KEY}`);
+  t.end();
 });
 
-test('list interests', (t) => {
-  t.plan(2);
+test('list interests', async (t) => {
   const subscriber = new Subscribe(process.env.API_KEY);
-  subscriber.listInterests(process.env.LIST_ID, (err, results) => {
-    t.equal(err, null, 'does not error when fetching list of interests');
-    t.ok(results.categories, 'returns a list of 0 or more categories');
-    t.end();
+  const results = await subscriber.listInterestCategories(process.env.LIST_ID);
+  t.ok(results.categories, 'returns a list of 0 or more categories');
+  t.end();
+});
+
+test('list information about an interest category', async (t) => {
+  const subscriber = new Subscribe(process.env.API_KEY);
+  const categoryList = await subscriber.listInterestCategories(process.env.LIST_ID);
+  const category = categoryList.categories[0];
+
+  if (category) {
+    const infoResults = await subscriber.interestCategoryInfo(process.env.LIST_ID, category.id);
+    t.ok(infoResults.title, 'returns the title and other parts of the interests cateogry');
+  }
+  t.end();
+});
+
+test('get all interests for a list', async (t) => {
+  t.plan(1);
+  const subscriber = new Subscribe(process.env.API_KEY);
+  const interests = await subscriber.listAllInterests(process.env.LIST_ID);
+  t.ok(interests, 'returns one or more interests without error');
+});
+
+test('subscribe', async (t) => {
+  t.plan(4);
+  const subscriber = new Subscribe(process.env.API_KEY);
+  const results = await subscriber.subscribe(process.env.LIST_ID, randomEmail(), null, {
+    FNAME: 'Bob',
+    LNAME: 'Smith'
   });
+
+  t.equal(typeof results, 'object');
+  t.equal(results.merge_fields.FNAME, 'Bob');
+  t.equal(results.merge_fields.LNAME, 'Smith');
+  t.equal(results.status, 'subscribed');
 });
 
-test('list information about an interest category', (t) => {
-  t.plan(2);
+test('unsubscribe', async (t) => {
+  t.plan(3);
   const subscriber = new Subscribe(process.env.API_KEY);
-  subscriber.listInterests(process.env.LIST_ID, (err, results) => {
-    const category = results.categories[0];
-    if (category) {
-      subscriber.interestInfo(process.env.LIST_ID, category.id, (err, info) => {
-        t.equal(err, null, 'does not error when fetching interest info');
-        t.ok(info.title, 'returns the title and other parts of the interests cateogry');
-        t.end();
-      });
-    }
-  });
-});
-
-test('subscribe', (t) => {
-  t.plan(6);
-  const subscriber = new Subscribe(process.env.API_KEY);
-  subscriber.subscribe(process.env.LIST_ID, randomEmail(), {
-    '80e101c6e8': true
+  const emailAddress = randomEmail();
+  const subscribeResult = await subscriber.subscribe(process.env.LIST_ID, emailAddress, {
   }, {
     FNAME: 'Bob',
     LNAME: 'Smith'
-  }, (err, results) => {
-    t.notOk(err);
-    t.equal(typeof results, 'object');
-    t.equal(results.merge_fields.FNAME, 'Bob');
-    t.equal(results.merge_fields.LNAME, 'Smith');
-    t.equal(results.interests['80e101c6e8'], true);
-    t.equal(results.status, 'subscribed');
   });
 
-});
+  t.equal(typeof subscribeResult, 'object');
 
-test.skip('unsubscribe', (t) => {
-  t.plan(2);
-  const subscriber = new Subscribe(process.env.API_KEY);
-  subscriber.subscribe(process.env.LIST_ID, randomEmail(), {
-  }, {
-    FNAME: 'Bob',
-    LNAME: 'Smith'
-  }, (err, results) => {
-    t.notOk(err);
-    t.equal(typeof results, 'object');
-    console.log(results)
-  });
+  const unsubResult = await subscriber.unsubscribe(process.env.LIST_ID, emailAddress);
 
+  t.equal(typeof unsubResult, 'object');
+  t.equal(unsubResult.status, 'unsubscribed');
 });

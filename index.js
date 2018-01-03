@@ -7,35 +7,72 @@ class MailchimpSubscribe {
     this.baseUrl = `https://${apiKey.split('-')[1]}.api.mailchimp.com/3.0`;
   }
 
-  request(endpoint, method, data, done) {
-    wreck.request(method, `${this.baseUrl}${endpoint}`, {
+  async request(endpoint, method, data) {
+    const response = await wreck.request(method, `${this.baseUrl}${endpoint}`, {
       headers: {
         Authorization: `Basic ${new Buffer(`mailchimp_user:${this.apiKey}`).toString('base64')}`
       },
       payload: JSON.stringify(data)
-    }, (err, response, json) => {
-      if (err) {
-        return done(err);
-      }
-      wreck.read(response, { json: true }, (err, body) => {
-        if (response.statusCode !== 200) {
-          return done(body);
-        }
-        done(null, body);
-      });
     });
+
+    const body = await wreck.read(response, { json: true });
+    if (response.statusCode !== 200) {
+      throw new Error(body.detail);
+    }
+
+    return body;
   }
 
-  listInterests(listId, done) {
-    this.request(`/lists/${listId}/interest-categories`, 'GET', {}, done);
+  listInterestCategories(listId) {
+    return this.request(`/lists/${listId}/interest-categories`, 'GET', {});
   }
 
-  interestInfo(listId, interestCategoryId, done) {
-    this.request(`/lists/${listId}/interest-categories/${interestCategoryId}`, 'GET', {}, done);
+  interestCategoryInfo(listId, interestCategoryId) {
+    return this.request(`/lists/${listId}/interest-categories/${interestCategoryId}`, 'GET', {});
   }
 
-  updateUser(listId, email, interests, mergeVars, status, done) {
+  listInterestsByCategory(listId, interestCategoryId) {
+    return this.request(`/lists/${listId}/interest-categories/${interestCategoryId}/interests`, 'GET', {});
+  }
+
+  async listAllInterests(listId) {
+    const categories = await this.listInterestCategories(listId);
+    let interests = [];
+    for(let cat of categories.categories) {
+      const interestResponse = await this.listInterestsByCategory(cat.list_id, cat.id);
+      interests = interests.concat(interestResponse.interests);
+    }
+
+    return interests;
+  }
+
+  async parseInterests(listId, interests) {
+    const interestArray = interests.split(',');
+    const allInterests = await this.listAllInterests(listId);
+    const interestObject = {};
+    allInterests.forEach((i) => {
+      if (interestArray.includes(i.name)) {
+        interestObject[i.id] = true;
+      }
+    });
+
+    return interestObject;
+  }
+
+  async updateUser(listId, email, interests, mergeVars, status) {
     const emailHash = crypto.createHash('md5').update(email).digest('hex');
+
+    if (typeof interests === 'string') {
+      interests = await this.parseInterests(listId, interests);
+    }
+
+    if (!interests) {
+      interests = {};
+    }
+
+    if (!mergeVars) {
+      mergeVars = {};
+    }
 
     const data = {
       interests,
@@ -45,11 +82,15 @@ class MailchimpSubscribe {
       merge_fields: mergeVars
     };
     const endpoint = `/lists/${listId}/members/${emailHash}`;
-    this.request(endpoint, 'PUT', data, done);
+    return this.request(endpoint, 'PUT', data);
   }
 
-  subscribe(listId, email, interests, mergeVars, done) {
-    this.updateUser(listId, email, interests, mergeVars, 'subscribed', done);
+  subscribe(listId, email, interests, mergeVars) {
+    return this.updateUser(listId, email, interests, mergeVars, 'subscribed');
+  }
+
+  unsubscribe(listId, email) {
+    return this.updateUser(listId, email, null, null, 'unsubscribed');
   }
 }
 
