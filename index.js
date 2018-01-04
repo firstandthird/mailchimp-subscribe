@@ -43,16 +43,15 @@ class MailchimpSubscribe {
     }
 
     const categories = await this.listInterestCategories(listId);
-    let interests = [];
     const promiseArr = [];
     categories.categories.forEach(cat => {
-      promiseArr.push( this.listInterestsByCategory(cat.list_id, cat.id));
+      promiseArr.push(this.listInterestsByCategory(cat.list_id, cat.id));
     });
     const results = await Promise.all(promiseArr);
 
-    results.forEach(res => {
-      interests = interests.concat(res.interests);
-    });
+    const interests = results.reduce((acc, curr) => acc.concat(curr.interests), []);
+
+    this.interestsCache[listId] = interests;
 
     return interests;
   }

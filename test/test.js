@@ -49,6 +49,17 @@ test('get all interests for a list', async (t) => {
   t.ok(interests, 'returns one or more interests without error');
 });
 
+test('get interests returns from cache', async (t) => {
+  t.plan(2);
+  const subscriber = new Subscribe(process.env.API_KEY);
+  const dummyId = 'dhf238hdfs';
+  subscriber.interestsCache[dummyId] = [{ name: 'Dummy Interest', id: '923423980234'}];
+
+  const interests = await subscriber.listAllInterests(dummyId);
+  t.equals(interests[0].name, 'Dummy Interest');
+  t.equals(interests[0].id, '923423980234');
+});
+
 test('allows string interests to be parsed', async (t) => {
   t.plan(1);
   const subscriber = new Subscribe(process.env.API_KEY);
@@ -56,6 +67,24 @@ test('allows string interests to be parsed', async (t) => {
   const interestObj = await subscriber.parseInterests(process.env.LIST_ID, intArr.join(','));
   t.ok(interestObj, 'returns a formatted interest obj');
 });
+
+test('parsed string interests return correctly', async (t) => {
+  t.plan(2);
+  const subscriber = new Subscribe(process.env.API_KEY);
+  const dummyId = '23jd8f23h89';
+  subscriber.interestsCache[dummyId] = [
+    { name: 'Bread', id: '001' },
+    { name: 'Cheese', id: '002' },
+    { name: 'Grapes', id: '003' },
+    { name: 'Tofu', id: 'bleh' }
+  ];
+  const intArr = ['Bread', 'Cheese', 'Grapes'];
+  const interestObj = await subscriber.parseInterests(dummyId, intArr.join(','));
+  t.ok(interestObj, 'returns a formatted interest obj');
+  t.same(interestObj, { '001': true, '002': true, '003': true });
+});
+
+
 
 test('subscribe', async (t) => {
   t.plan(4);
