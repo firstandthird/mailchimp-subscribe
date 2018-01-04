@@ -98,6 +98,29 @@ test('subscribe', async (t) => {
   t.equal(results.status, 'subscribed');
 });
 
+test('subscribe with array of interests', async (t) => {
+  t.plan(2);
+
+  const subscriber = new Subscribe(process.env.API_KEY);
+  const email = randomEmail();
+
+  const dummyId = '23jd8f23h89';
+  subscriber.interestsCache[dummyId] = [
+    { name: 'Bread', id: '001' },
+    { name: 'Cheese', id: '002' },
+    { name: 'Grapes', id: '003' },
+    { name: 'Tofu', id: 'bleh' }
+  ];
+
+  // Overload the request method
+  subscriber.request = async function(endpoint, method, data) {
+    t.equal(typeof data, 'object');
+    t.same(data.interests, { '001': true, '003': true });
+  };
+
+  const result = await subscriber.updateUser(dummyId, email, { '001': true, '003': true }, {});
+});
+
 test('unsubscribe', async (t) => {
   t.plan(3);
   const subscriber = new Subscribe(process.env.API_KEY);

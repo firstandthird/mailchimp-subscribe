@@ -4,7 +4,7 @@
   "description": "Library to subscribe or update users in mailchimp",
   "main": "index.js",
   "scripts": {
-    "test": "tap test/*.js"
+    "test": "tap test/*.js --cov"
   },
   "repository": {
     "type": "git",
