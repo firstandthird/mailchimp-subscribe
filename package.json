@@ -4,7 +4,7 @@
   "description": "Library to subscribe or update users in mailchimp",
   "main": "index.js",
   "scripts": {
-    "test": "tape test/*.js | tap-spec"
+    "test": "tap test/*.js --cov"
   },
   "repository": {
     "type": "git",
@@ -20,8 +20,7 @@
   },
   "homepage": "https://github.com/firstandthird/mailchimp-subscribe#readme",
   "dependencies": {
-    "tape": "^4.6.2",
-    "wreck": "^10.0.0"
+    "wreck": "^14.0.2"
   },
   "eslintConfig": {
     "extends": "firstandthird"
@@ -30,6 +29,6 @@
     "eslint": "^3.4.0",
     "eslint-config-firstandthird": "^3.0.2",
     "eslint-plugin-import": "^1.14.0",
-    "tap-spec": "^4.1.1"
+    "tap": "^11.0.1"
   }
 }
