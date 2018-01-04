@@ -84,8 +84,6 @@ test('parsed string interests return correctly', async (t) => {
   t.same(interestObj, { '001': true, '002': true, '003': true });
 });
 
-
-
 test('subscribe', async (t) => {
   t.plan(4);
   const subscriber = new Subscribe(process.env.API_KEY);
@@ -116,4 +114,47 @@ test('unsubscribe', async (t) => {
 
   t.equal(typeof unsubResult, 'object');
   t.equal(unsubResult.status, 'unsubscribed');
+});
+
+test('allows updating users', async (t) => {
+  const subscriber = new Subscribe(process.env.API_KEY);
+  const email = randomEmail();
+  const results = await subscriber.subscribe(process.env.LIST_ID, email, {}, {
+    FNAME: 'Bob',
+    LNAME: 'Smith'
+  });
+
+  t.equal(typeof results, 'object');
+  t.equal(results.merge_fields.FNAME, 'Bob');
+
+  const updResults = await subscriber.updateUser(process.env.LIST_ID, email, {}, {
+    FNAME: 'John'
+  });
+
+  t.equal(typeof updResults, 'object');
+  t.equal(updResults.merge_fields.FNAME, 'John');
+
+});
+
+test('updating interests with string converts to object', async (t) => {
+  t.plan(2);
+
+  const subscriber = new Subscribe(process.env.API_KEY);
+  const email = randomEmail();
+
+  const dummyId = '23jd8f23h89';
+  subscriber.interestsCache[dummyId] = [
+    { name: 'Bread', id: '001' },
+    { name: 'Cheese', id: '002' },
+    { name: 'Grapes', id: '003' },
+    { name: 'Tofu', id: 'bleh' }
+  ];
+
+  // Overload the request method
+  subscriber.request = async function(endpoint, method, data) {
+    t.equal(typeof data, 'object');
+    t.same(data.interests, { '001': true, '003': true });
+  };
+
+  const result = await subscriber.updateUser(dummyId, email, 'Bread,Grapes', {});
 });
