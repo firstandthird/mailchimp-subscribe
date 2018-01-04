@@ -61,27 +61,12 @@ test('get interests returns from cache', async (t) => {
 });
 
 test('allows string interests to be parsed', async (t) => {
-  t.plan(1);
-  const subscriber = new Subscribe(process.env.API_KEY);
-  const intArr = ['Dummy'];
-  const interestObj = await subscriber.parseInterests(process.env.LIST_ID, intArr.join(','));
-  t.ok(interestObj, 'returns a formatted interest obj');
-});
-
-test('parsed string interests return correctly', async (t) => {
   t.plan(2);
   const subscriber = new Subscribe(process.env.API_KEY);
-  const dummyId = '23jd8f23h89';
-  subscriber.interestsCache[dummyId] = [
-    { name: 'Bread', id: '001' },
-    { name: 'Cheese', id: '002' },
-    { name: 'Grapes', id: '003' },
-    { name: 'Tofu', id: 'bleh' }
-  ];
-  const intArr = ['Bread', 'Cheese', 'Grapes'];
-  const interestObj = await subscriber.parseInterests(dummyId, intArr.join(','));
+  const intArr = ['Free'];
+  const interestObj = await subscriber.parseInterests(process.env.LIST_ID, intArr.join(','));
   t.ok(interestObj, 'returns a formatted interest obj');
-  t.same(interestObj, { '001': true, '002': true, '003': true });
+  t.same(interestObj, { 'abb786b9ac': true });
 });
 
 test('subscribe', async (t) => {
@@ -104,21 +89,9 @@ test('subscribe with array of interests', async (t) => {
   const subscriber = new Subscribe(process.env.API_KEY);
   const email = randomEmail();
 
-  const dummyId = '23jd8f23h89';
-  subscriber.interestsCache[dummyId] = [
-    { name: 'Bread', id: '001' },
-    { name: 'Cheese', id: '002' },
-    { name: 'Grapes', id: '003' },
-    { name: 'Tofu', id: 'bleh' }
-  ];
-
-  // Overload the request method
-  subscriber.request = async function(endpoint, method, data) {
-    t.equal(typeof data, 'object');
-    t.same(data.interests, { '001': true, '003': true });
-  };
-
-  const result = await subscriber.updateUser(dummyId, email, { '001': true, '003': true }, {});
+  const result = await subscriber.subscribe(process.env.LIST_ID, email, { 'abb786b9ac': true }, {});
+  t.ok(result);
+  t.same(result.interests, { 'abb786b9ac': true, '38a9e1227b': false });
 });
 
 test('unsubscribe', async (t) => {
@@ -152,7 +125,7 @@ test('allows updating users', async (t) => {
 
   const updResults = await subscriber.updateUser(process.env.LIST_ID, email, {}, {
     FNAME: 'John'
-  });
+  }, 'subscribed');
 
   t.equal(typeof updResults, 'object');
   t.equal(updResults.merge_fields.FNAME, 'John');
@@ -165,19 +138,7 @@ test('updating interests with string converts to object', async (t) => {
   const subscriber = new Subscribe(process.env.API_KEY);
   const email = randomEmail();
 
-  const dummyId = '23jd8f23h89';
-  subscriber.interestsCache[dummyId] = [
-    { name: 'Bread', id: '001' },
-    { name: 'Cheese', id: '002' },
-    { name: 'Grapes', id: '003' },
-    { name: 'Tofu', id: 'bleh' }
-  ];
-
-  // Overload the request method
-  subscriber.request = async function(endpoint, method, data) {
-    t.equal(typeof data, 'object');
-    t.same(data.interests, { '001': true, '003': true });
-  };
-
-  const result = await subscriber.updateUser(dummyId, email, 'Bread,Grapes', {});
+  const result = await subscriber.updateUser(process.env.LIST_ID, email, 'Paid', {}, 'subscribed');
+  t.equal(typeof result, 'object');
+  t.same(result.interests, { 'abb786b9ac': false, '38a9e1227b': true });
 });
