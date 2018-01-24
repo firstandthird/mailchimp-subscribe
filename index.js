@@ -56,25 +56,62 @@ class MailchimpSubscribe {
     return interests;
   }
 
-  async parseInterests(listId, interests) {
+  parseInterestString(interests) {
     const interestArray = interests.split(',');
-    const allInterests = await this.listAllInterests(listId);
     const interestObject = {};
-    allInterests.forEach((i) => {
-      if (interestArray.includes(i.name)) {
-        interestObject[i.id] = true;
+    interestArray.forEach(interest => {
+      const intArr = interest.split(':');
+      if (!interestObject[intArr[0]]) {
+        interestObject[intArr[0]] = [];
       }
+      interestObject[intArr[0]].push(intArr[1]);
     });
 
     return interestObject;
   }
 
+  async parseInterests(listId, interests) {
+    if (!interests) {
+      return {};
+    }
+
+    if (typeof interests === 'string') {
+      interests = this.parseInterestString(interests);
+    }
+
+    const ints = {};
+    const allCategories = await this.listInterestCategories(listId);
+
+    const catObj = {};
+    allCategories.categories.map( cat => {
+      catObj[cat.title] = cat.id;
+    });
+
+    const promiseArr = Object.keys(interests).map(async (key) => {
+      if (catObj[key]) {
+        const catInts = await this.listInterestsByCategory(listId, catObj[key]);
+        catInts.interests.forEach((i) => {
+          let intName = interests[key];
+          if (typeof intName === 'string') {
+            intName = [ intName ];
+          }
+          intName.forEach(nm => {
+            if (nm === i.name) {
+              ints[i.id] = true;
+            }
+          });
+        });
+      }
+    });
+
+    const results = await Promise.all(promiseArr);
+    return ints;
+  }
+
   async updateUser(listId, email, interests, mergeVars, status) {
     const emailHash = crypto.createHash('md5').update(email).digest('hex');
 
-    if (typeof interests === 'string') {
-      interests = await this.parseInterests(listId, interests);
-    }
+    interests = await this.parseInterests(listId, interests);
 
     if (!interests) {
       interests = {};
