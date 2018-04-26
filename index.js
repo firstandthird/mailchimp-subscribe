@@ -19,6 +19,7 @@ class MailchimpSubscribe {
 
     const body = await wreck.read(response, { json: true });
     if (response.statusCode !== 200) {
+      console.log(body);
       throw new Error(body.detail);
     }
 
@@ -112,22 +113,24 @@ class MailchimpSubscribe {
     const emailHash = crypto.createHash('md5').update(email).digest('hex');
 
     interests = await this.parseInterests(listId, interests);
-
-    if (!interests) {
-      interests = {};
-    }
-
-    if (!mergeVars) {
-      mergeVars = {};
-    }
-
+    
     const data = {
-      interests,
-      status,
-      email_address: email,
-      status_if_new: status,
-      merge_fields: mergeVars
+      email_address: email
     };
+    
+    if (status) {
+      data.status = status;
+      data.status_id_new = status;
+    }
+
+    if (interests) {
+      data.interests = interests;
+    }
+
+    if (mergeVars) {
+      data.merge_fields = mergeVars;
+    }
+    
     const endpoint = `/lists/${listId}/members/${emailHash}`;
     return this.request(endpoint, 'PUT', data);
   }
