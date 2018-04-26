@@ -3,10 +3,11 @@ const wreck = require('wreck');
 const crypto = require('crypto');
 
 class MailchimpSubscribe {
-  constructor(apiKey) {
+  constructor(apiKey, debug = false) {
     this.apiKey = apiKey;
     this.baseUrl = `https://${apiKey.split('-')[1]}.api.mailchimp.com/3.0`;
     this.interestsCache = [];
+    this.debug = debug;
   }
 
   async request(endpoint, method, data) {
@@ -132,6 +133,18 @@ class MailchimpSubscribe {
     }
     
     const endpoint = `/lists/${listId}/members/${emailHash}`;
+    
+    if (this.debug) {
+      console.log(['MailchimpSubscribe', 'debug'], {
+        endpoint,
+        data
+      });
+      
+      if (this.debug === 'log') {
+        return;
+      }
+    }
+    
     return this.request(endpoint, 'PUT', data);
   }
 
