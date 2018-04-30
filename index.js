@@ -19,10 +19,6 @@ class MailchimpSubscribe {
     });
 
     const body = await wreck.read(response, { json: true });
-    if (response.statusCode !== 200) {
-      console.log(body.toString());
-      throw new Error(body.detail);
-    }
 
     return body;
   }
