@@ -19,8 +19,8 @@ test('initalize', (t) => {
 test('throws error on error', async (t) => {
   t.plan(1);
   const subscriber = new Subscribe(process.env.API_KEY);
-  const result = subscriber.request(`/lists/${process.env.LIST_ID}/members/zxyey`, 'PUT', { email_address: 'nothing' });
-  t.rejects(result, {}, 'Does not throw a good error');
+  const result = await subscriber.request(`/lists/${process.env.LIST_ID}/members/zxyey`, 'PUT', { email_address: 'nothing' });
+  t.notEqual(result.status, 200, 'Returns error');
 });
 
 test('list interests', async (t) => {
@@ -66,7 +66,7 @@ test('allows string interests to be parsed', async (t) => {
   const intArr = ['Membership:Free'];
   const interestObj = await subscriber.parseInterests(process.env.LIST_ID, intArr.join(','));
   t.ok(interestObj, 'returns a formatted interest obj');
-  t.same(interestObj, { 'abb786b9ac': true });
+  t.same(interestObj, { f5c474601c: true });
 });
 
 test('subscribe', async (t) => {
@@ -91,7 +91,7 @@ test('subscribe with array of interests', async (t) => {
 
   const result = await subscriber.subscribe(process.env.LIST_ID, email, { Membership: 'Free' }, {});
   t.ok(result);
-  t.same(result.interests, { 'abb786b9ac': true, '38a9e1227b': false });
+  t.same(result.interests, { 'f5c474601c': true, '37054969ab': false });
 });
 
 test('unsubscribe', async (t) => {
@@ -140,5 +140,5 @@ test('updating interests with string converts to object', async (t) => {
 
   const result = await subscriber.updateUser(process.env.LIST_ID, email, 'Membership:Paid', {}, 'subscribed');
   t.equal(typeof result, 'object');
-  t.same(result.interests, { 'abb786b9ac': false, '38a9e1227b': true });
+  t.same(result.interests, { 'f5c474601c': false, '37054969ab': true });
 });

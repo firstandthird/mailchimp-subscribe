@@ -84,7 +84,7 @@ class MailchimpSubscribe {
     allCategories.categories.map( cat => {
       catObj[cat.title] = cat.id;
     });
-
+    
     const promiseArr = Object.keys(interests).map(async (key) => {
       if (catObj[key]) {
         const catInts = await this.listInterestsByCategory(listId, catObj[key]);
@@ -117,7 +117,7 @@ class MailchimpSubscribe {
 
     if (status) {
       data.status = status;
-      data.status_id_new = status;
+      data.status_if_new = status;
     }
 
     if (interests) {
