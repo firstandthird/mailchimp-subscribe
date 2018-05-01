@@ -3,10 +3,11 @@ const wreck = require('wreck');
 const crypto = require('crypto');
 
 class MailchimpSubscribe {
-  constructor(apiKey) {
+  constructor(apiKey, debug = false) {
     this.apiKey = apiKey;
     this.baseUrl = `https://${apiKey.split('-')[1]}.api.mailchimp.com/3.0`;
     this.interestsCache = [];
+    this.debug = debug;
   }
 
   async request(endpoint, method, data) {
@@ -18,9 +19,6 @@ class MailchimpSubscribe {
     });
 
     const body = await wreck.read(response, { json: true });
-    if (response.statusCode !== 200) {
-      throw new Error(body.detail);
-    }
 
     return body;
   }
@@ -86,7 +84,7 @@ class MailchimpSubscribe {
     allCategories.categories.map( cat => {
       catObj[cat.title] = cat.id;
     });
-
+    
     const promiseArr = Object.keys(interests).map(async (key) => {
       if (catObj[key]) {
         const catInts = await this.listInterestsByCategory(listId, catObj[key]);
@@ -113,22 +111,36 @@ class MailchimpSubscribe {
 
     interests = await this.parseInterests(listId, interests);
 
-    if (!interests) {
-      interests = {};
-    }
-
-    if (!mergeVars) {
-      mergeVars = {};
-    }
-
     const data = {
-      interests,
-      status,
-      email_address: email,
-      status_if_new: status,
-      merge_fields: mergeVars
+      email_address: email
     };
+
+    if (status) {
+      data.status = status;
+      data.status_if_new = status;
+    }
+
+    if (interests) {
+      data.interests = interests;
+    }
+
+    if (mergeVars) {
+      data.merge_fields = mergeVars;
+    }
+
     const endpoint = `/lists/${listId}/members/${emailHash}`;
+
+    if (this.debug) {
+      console.log(['MailchimpSubscribe', 'debug'], {
+        endpoint,
+        data
+      });
+
+      if (this.debug === 'log') {
+        return;
+      }
+    }
+
     return this.request(endpoint, 'PUT', data);
   }
 
