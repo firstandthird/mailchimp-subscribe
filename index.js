@@ -118,6 +118,8 @@ class MailchimpSubscribe {
     if (status) {
       data.status = status;
       data.status_if_new = status;
+    } else {
+      data.status_if_new = 'subscribed';
     }
 
     if (interests) {
