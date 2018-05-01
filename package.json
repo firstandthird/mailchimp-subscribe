@@ -1,6 +1,6 @@
 {
   "name": "mailchimp-subscribe",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Library to subscribe or update users in mailchimp",
   "main": "index.js",
   "scripts": {
