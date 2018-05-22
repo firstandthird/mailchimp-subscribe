@@ -49,6 +49,7 @@ class MailchimpSubscribe {
       });
     } else {
       console.log(['MailchimpSubscribe', 'bad-data', 'debug'], categories);
+      throw new Error('Invalid response data');
     }
     
     const results = await Promise.all(promiseArr);
@@ -94,6 +95,7 @@ class MailchimpSubscribe {
       });
     } else {
       console.log(['MailchimpSubscribe', 'bad-data', 'debug'], allCategories);
+      throw new Error('Invalid response data');
     }
     
     const promiseArr = Object.keys(interests).map(async (key) => {
