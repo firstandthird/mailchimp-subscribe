@@ -42,9 +42,15 @@ class MailchimpSubscribe {
 
     const categories = await this.listInterestCategories(listId);
     const promiseArr = [];
-    categories.categories.forEach(cat => {
-      promiseArr.push(this.listInterestsByCategory(cat.list_id, cat.id));
-    });
+    
+    if (categories && Array.isArray(categories.categories)) {
+      categories.categories.forEach(cat => {
+        promiseArr.push(this.listInterestsByCategory(cat.list_id, cat.id));
+      });
+    } else {
+      console.log(['MailchimpSubscribe', 'bad-data', 'debug'], categories);
+    }
+    
     const results = await Promise.all(promiseArr);
 
     const interests = results.reduce((acc, curr) => acc.concat(curr.interests), []);
@@ -81,9 +87,14 @@ class MailchimpSubscribe {
     const allCategories = await this.listInterestCategories(listId);
 
     const catObj = {};
-    allCategories.categories.map( cat => {
-      catObj[cat.title] = cat.id;
-    });
+    
+    if (allCategories && Array.isArray(allCategories.categories)) {
+      allCategories.categories.map( cat => {
+        catObj[cat.title] = cat.id;
+      });
+    } else {
+      console.log(['MailchimpSubscribe', 'bad-data', 'debug'], allCategories);
+    }
     
     const promiseArr = Object.keys(interests).map(async (key) => {
       if (catObj[key]) {
