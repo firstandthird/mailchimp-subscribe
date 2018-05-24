@@ -1,6 +1,6 @@
-'use strict';
 const wreck = require('wreck');
 const crypto = require('crypto');
+const Boom = require('boom');
 
 class MailchimpSubscribe {
   constructor(apiKey, debug = false) {
@@ -42,16 +42,15 @@ class MailchimpSubscribe {
 
     const categories = await this.listInterestCategories(listId);
     const promiseArr = [];
-    
+
     if (categories && Array.isArray(categories.categories)) {
       categories.categories.forEach(cat => {
         promiseArr.push(this.listInterestsByCategory(cat.list_id, cat.id));
       });
     } else {
-      console.log(['MailchimpSubscribe', 'bad-data', 'debug'], categories);
-      throw new Error('Invalid response data');
+      throw Boom.badData('Invalid response data', categories);
     }
-    
+
     const results = await Promise.all(promiseArr);
 
     const interests = results.reduce((acc, curr) => acc.concat(curr.interests), []);
@@ -88,23 +87,22 @@ class MailchimpSubscribe {
     const allCategories = await this.listInterestCategories(listId);
 
     const catObj = {};
-    
+
     if (allCategories && Array.isArray(allCategories.categories)) {
-      allCategories.categories.map( cat => {
+      allCategories.categories.forEach(cat => {
         catObj[cat.title] = cat.id;
       });
     } else {
-      console.log(['MailchimpSubscribe', 'bad-data', 'debug'], allCategories);
-      throw new Error('Invalid response data');
+      throw Boom.badData('Invalid response data', allCategories);
     }
-    
+
     const promiseArr = Object.keys(interests).map(async (key) => {
       if (catObj[key]) {
         const catInts = await this.listInterestsByCategory(listId, catObj[key]);
         catInts.interests.forEach((i) => {
           let intName = interests[key];
           if (typeof intName === 'string') {
-            intName = [ intName ];
+            intName = [intName];
           }
           intName.forEach(nm => {
             if (nm === i.name) {
@@ -115,7 +113,7 @@ class MailchimpSubscribe {
       }
     });
 
-    const results = await Promise.all(promiseArr);
+    await Promise.all(promiseArr);
     return ints;
   }
 
