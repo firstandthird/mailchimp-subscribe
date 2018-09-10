@@ -142,3 +142,15 @@ test('updating interests with string converts to object', async (t) => {
   t.equal(typeof result, 'object');
   t.same(result.interests, { 'f5c474601c': false, '37054969ab': true });
 });
+
+test('add users to a list', async (t) => {
+  const subscriber = new Subscribe(process.env.API_KEY);
+  await subscriber.addTags(process.env.LIST_ID, process.env.API_EMAIL, ['TAG1', 'TAG2']);
+  t.end();
+});
+
+test('add users to a list', async (t) => {
+  const subscriber = new Subscribe(process.env.API_KEY);
+  await subscriber.removeTags(process.env.LIST_ID, process.env.API_EMAIL, ['TAG1']);
+  t.end();
+});

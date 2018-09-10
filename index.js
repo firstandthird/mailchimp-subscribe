@@ -164,6 +164,46 @@ class MailchimpSubscribe {
   unsubscribe(listId, email) {
     return this.updateUser(listId, email, null, null, 'unsubscribed');
   }
+
+  async addTags(listId, email, tagsArray) {
+    // make sure all tags exist:
+    const existingTagList = await this.request(`/lists/${listId}/segments`, 'GET', {});
+    const existingTags = [];
+    existingTagList.segments.forEach(segment => {
+      if (tagsArray.includes(segment.name)) {
+        existingTags.push(segment);
+        tagsArray.splice(tagsArray.indexOf(segment.name), 1);
+      }
+    });
+    // will still contain tags that don't exist:
+    tagsArray.forEach(async tag => {
+      // make a new one if it does not exist:
+      await this.request(`/lists/${listId}/segments`, 'POST', {
+        name: tag,
+        static_segment: [email]
+      });
+    });
+    existingTags.forEach(async segment => {
+      await this.request(`/lists/${listId}/segments/${segment.id}`, 'POST', {
+        members_to_add: [email]
+      });
+    });
+  }
+
+  async removeTags(listId, email, tagsArray) {
+    const existingTagList = await this.request(`/lists/${listId}/segments`, 'GET', {});
+    const existingTags = [];
+    existingTagList.segments.forEach(segment => {
+      if (tagsArray.includes(segment.name)) {
+        existingTags.push(segment);
+      }
+    });
+    existingTags.forEach(async segment => {
+      await this.request(`/lists/${listId}/segments/${segment.id}`, 'POST', {
+        members_to_remove: [email]
+      });
+    });
+  }
 }
 
 module.exports = MailchimpSubscribe;
