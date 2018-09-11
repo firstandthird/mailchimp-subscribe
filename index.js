@@ -210,20 +210,9 @@ class MailchimpSubscribe {
   }
 
   async getTagsByUser(listId, email) {
-    const segments = await this.request(`/lists/${process.env.LIST_ID}/segments`, 'GET');
-    const tags = [];
-    await Promise.all(segments.segments.map(seg =>
-      new Promise(async resolve => {
-        const res = await this.request(`/lists/${process.env.LIST_ID}/segments/${seg.id}/members`, 'GET');
-        res.members.forEach(m => {
-          if (m.email_address === email && !tags.includes(seg.name)) {
-            tags.push(seg.name);
-          }
-        });
-        resolve();
-      })
-    ));
-    return tags;
+    const emailHash = crypto.createHash('md5').update(email).digest('hex');
+    const member = await this.request(`/lists/${process.env.LIST_ID}/members/${emailHash}`, 'GET');
+    return member.tags.map(t => t.name);
   }
 }
 
