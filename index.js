@@ -165,9 +165,13 @@ class MailchimpSubscribe {
     return this.updateUser(listId, email, null, null, 'unsubscribed');
   }
 
+  getExistingTags(listId) {
+    return this.request(`/lists/${listId}/segments`, 'GET', {});
+  }
+
   async addTags(listId, email, tagsArray) {
+    const existingTagList = await this.getExistingTags(listId);
     // make sure all tags exist:
-    const existingTagList = await this.request(`/lists/${listId}/segments`, 'GET', {});
     const existingTags = [];
     existingTagList.segments.forEach(segment => {
       if (tagsArray.includes(segment.name)) {
@@ -175,34 +179,34 @@ class MailchimpSubscribe {
         tagsArray.splice(tagsArray.indexOf(segment.name), 1);
       }
     });
-    // will still contain tags that don't exist:
-    tagsArray.forEach(async tag => {
-      // make a new one if it does not exist:
-      await this.request(`/lists/${listId}/segments`, 'POST', {
+    // will still contain tags that don't exist
+    // make a new one if it does not exist:
+    await Promise.all(tagsArray.map(tag =>
+      this.request(`/lists/${listId}/segments`, 'POST', {
         name: tag,
         static_segment: [email]
-      });
-    });
-    existingTags.forEach(async segment => {
-      await this.request(`/lists/${listId}/segments/${segment.id}`, 'POST', {
+      })
+    ));
+    await Promise.all(existingTags.map(segment =>
+      this.request(`/lists/${listId}/segments/${segment.id}`, 'POST', {
         members_to_add: [email]
-      });
-    });
+      })
+    ));
   }
 
   async removeTags(listId, email, tagsArray) {
-    const existingTagList = await this.request(`/lists/${listId}/segments`, 'GET', {});
+    const existingTagList = await this.getExistingTags(listId);
     const existingTags = [];
     existingTagList.segments.forEach(segment => {
       if (tagsArray.includes(segment.name)) {
         existingTags.push(segment);
       }
     });
-    existingTags.forEach(async segment => {
-      await this.request(`/lists/${listId}/segments/${segment.id}`, 'POST', {
+    await Promise.all(existingTags.map(segment =>
+      this.request(`/lists/${listId}/segments/${segment.id}`, 'POST', {
         members_to_remove: [email]
-      });
-    });
+      })
+    ));
   }
 }
 

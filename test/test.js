@@ -143,14 +143,38 @@ test('updating interests with string converts to object', async (t) => {
   t.same(result.interests, { 'f5c474601c': false, '37054969ab': true });
 });
 
-test('add users to a list', async (t) => {
+const checkMembers = async (subscriber, name) => {
+  const segments = await subscriber.request(`/lists/${process.env.LIST_ID}/segments`, 'GET');
+  let found = false;
+  await Promise.all(segments.segments.map(seg =>
+    new Promise(async resolve => {
+      const res = await subscriber.request(`/lists/${process.env.LIST_ID}/segments/${seg.id}/members`, 'GET');
+      res.members.forEach(m => {
+        if (name === seg.name && m.email_address === process.env.API_EMAIL) {
+          found = true;
+        }
+      });
+      resolve();
+    })
+  ));
+  return found;
+};
+
+test('add tags for an email', async (t) => {
   const subscriber = new Subscribe(process.env.API_KEY);
   await subscriber.addTags(process.env.LIST_ID, process.env.API_EMAIL, ['TAG1', 'TAG2']);
+  await subscriber.addTags(process.env.LIST_ID, process.env.API_EMAIL, ['TAG2', 'TAG3']);
+  t.ok(await checkMembers(subscriber, 'TAG1'));
+  t.ok(await checkMembers(subscriber, 'TAG2'));
+  t.ok(await checkMembers(subscriber, 'TAG3'));
   t.end();
 });
 
-test('add users to a list', async (t) => {
+test('remove tags for an email', async (t) => {
   const subscriber = new Subscribe(process.env.API_KEY);
-  await subscriber.removeTags(process.env.LIST_ID, process.env.API_EMAIL, ['TAG1']);
+  await subscriber.removeTags(process.env.LIST_ID, process.env.API_EMAIL, ['TAG2']);
+  t.ok(await checkMembers(subscriber, 'TAG1'));
+  t.notOk(await checkMembers(subscriber, 'TAG2'));
+  t.ok(await checkMembers(subscriber, 'TAG3'));
   t.end();
 });
