@@ -208,6 +208,23 @@ class MailchimpSubscribe {
       })
     ));
   }
+
+  async getTagsByUser(listId, email) {
+    const segments = await this.request(`/lists/${process.env.LIST_ID}/segments`, 'GET');
+    const tags = [];
+    await Promise.all(segments.segments.map(seg =>
+      new Promise(async resolve => {
+        const res = await this.request(`/lists/${process.env.LIST_ID}/segments/${seg.id}/members`, 'GET');
+        res.members.forEach(m => {
+          if (m.email_address === email && !tags.includes(seg.name)) {
+            tags.push(seg.name);
+          }
+        });
+        resolve();
+      })
+    ));
+    return tags;
+  }
 }
 
 module.exports = MailchimpSubscribe;
