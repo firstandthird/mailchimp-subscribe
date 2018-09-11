@@ -142,3 +142,24 @@ test('updating interests with string converts to object', async (t) => {
   t.equal(typeof result, 'object');
   t.same(result.interests, { 'f5c474601c': false, '37054969ab': true });
 });
+
+test('add tags for an email and get back by user', async (t) => {
+  const subscriber = new Subscribe(process.env.API_KEY);
+  await subscriber.addTags(process.env.LIST_ID, process.env.API_EMAIL, ['TAG1', 'TAG2']);
+  await subscriber.addTags(process.env.LIST_ID, process.env.API_EMAIL, ['TAG2', 'TAG3']);
+  const tags = await subscriber.getTagsByUser(process.env.LIST_ID, process.env.API_EMAIL);
+  t.ok(tags.includes('TAG1'));
+  t.ok(tags.includes('TAG2'));
+  t.ok(tags.includes('TAG3'));
+  t.end();
+});
+
+test('remove tags for an email and get bac by user', async (t) => {
+  const subscriber = new Subscribe(process.env.API_KEY);
+  await subscriber.removeTags(process.env.LIST_ID, process.env.API_EMAIL, ['TAG2']);
+  const tags = await subscriber.getTagsByUser(process.env.LIST_ID, process.env.API_EMAIL);
+  t.ok(tags.includes('TAG1'));
+  t.notOk(tags.includes('TAG2'));
+  t.ok(tags.includes('TAG3'));
+  t.end();
+});
