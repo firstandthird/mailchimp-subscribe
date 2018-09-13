@@ -169,7 +169,15 @@ class MailchimpSubscribe {
     return this.request(`/lists/${listId}/segments`, 'GET', {});
   }
 
-  async addTags(listId, email, tagsArray) {
+  createTag(listId, tag, email) {
+    const packet = { name: tag };
+    if (email) {
+      packet.static_segment = [email];
+    }
+    return this.request(`/lists/${listId}/segments`, 'POST', packet);
+  }
+
+  async assignTagsToUser(listId, email, tagsArray, createIfNotExists = false) {
     const existingTagList = await this.getExistingTags(listId);
     // make sure all tags exist:
     const existingTags = [];
@@ -181,12 +189,13 @@ class MailchimpSubscribe {
     });
     // will still contain tags that don't exist
     // make a new one if it does not exist:
-    await Promise.all(tagsArray.map(tag =>
-      this.request(`/lists/${listId}/segments`, 'POST', {
-        name: tag,
-        static_segment: [email]
-      })
-    ));
+    if (tagsArray.length !== 0) {
+      if (createIfNotExists) {
+        await Promise.all(tagsArray.map(tag => this.createTag(listId, tag, email)));
+      } else {
+        throw new Error(`Trying to assign tags that have not been created yet:  ${tagsArray.join(',')}`);
+      }
+    }
     await Promise.all(existingTags.map(segment =>
       this.request(`/lists/${listId}/segments/${segment.id}`, 'POST', {
         members_to_add: [email]
@@ -212,6 +221,9 @@ class MailchimpSubscribe {
   async getTagsByUser(listId, email) {
     const emailHash = crypto.createHash('md5').update(email).digest('hex');
     const member = await this.request(`/lists/${process.env.LIST_ID}/members/${emailHash}`, 'GET');
+    if (!member.tags) {
+      return [];
+    }
     return member.tags.map(t => t.name);
   }
 }
