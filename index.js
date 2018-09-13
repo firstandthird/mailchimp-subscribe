@@ -189,10 +189,12 @@ class MailchimpSubscribe {
     });
     // will still contain tags that don't exist
     // make a new one if it does not exist:
-    if (createIfNotExists) {
-      await Promise.all(tagsArray.map(tag => this.createTag(listId, tag)));
-    } else {
-      throw new Error(`Trying to assign tags that have not been created yet:  ${tagsArray.join(',')}`);
+    if (tagsArray.length !== 0) {
+      if (createIfNotExists) {
+        await Promise.all(tagsArray.map(tag => this.createTag(listId, tag)));
+      } else {
+        throw new Error(`Trying to assign tags that have not been created yet:  ${tagsArray.join(',')}`);
+      }
     }
     await Promise.all(existingTags.map(segment =>
       this.request(`/lists/${listId}/segments/${segment.id}`, 'POST', {

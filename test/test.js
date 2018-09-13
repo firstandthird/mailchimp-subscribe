@@ -168,7 +168,7 @@ test('do not create new tags unless specified', async (t) => {
   const subscriber = new Subscribe(process.env.API_KEY);
   try {
     // 'TAG2' should not exist at this point:
-    await subscriber.assignTagsToUser(process.env.LIST_ID, process.env.API_EMAIL, ['TAG1', 'TAG2']);
+    await subscriber.assignTagsToUser(process.env.LIST_ID, process.env.API_EMAIL, ['NOTAG']);
   } catch (e) {
     return t.end();
   }
