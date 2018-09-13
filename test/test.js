@@ -176,8 +176,8 @@ test('do not create new tags unless specified', async (t) => {
 
 test('createTag', async (t) => {
   const subscriber = new Subscribe(process.env.API_KEY);
-  await subscriber.createTag(process.env.LIST_ID, 'TAG2', process.env.API_EMAIL);
+  await subscriber.createTag(process.env.LIST_ID, 'NEW_TAG', process.env.API_EMAIL);
   const tags = await subscriber.getTagsByUser(process.env.LIST_ID, process.env.API_EMAIL);
-  t.ok(tags.includes('TAG2'));
+  t.ok(tags.includes('NEW_TAG'));
   t.end();
 });

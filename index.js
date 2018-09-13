@@ -191,7 +191,7 @@ class MailchimpSubscribe {
     // make a new one if it does not exist:
     if (tagsArray.length !== 0) {
       if (createIfNotExists) {
-        await Promise.all(tagsArray.map(tag => this.createTag(listId, tag)));
+        await Promise.all(tagsArray.map(tag => this.createTag(listId, tag, email)));
       } else {
         throw new Error(`Trying to assign tags that have not been created yet:  ${tagsArray.join(',')}`);
       }
