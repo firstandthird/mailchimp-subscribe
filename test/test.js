@@ -145,8 +145,8 @@ test('updating interests with string converts to object', async (t) => {
 
 test('add tags for an email and get back by user', async (t) => {
   const subscriber = new Subscribe(process.env.API_KEY);
-  await subscriber.addTags(process.env.LIST_ID, process.env.API_EMAIL, ['TAG1', 'TAG2']);
-  await subscriber.addTags(process.env.LIST_ID, process.env.API_EMAIL, ['TAG2', 'TAG3']);
+  await subscriber.assignTagsToUser(process.env.LIST_ID, process.env.API_EMAIL, ['TAG1', 'TAG2'], true);
+  await subscriber.assignTagsToUser(process.env.LIST_ID, process.env.API_EMAIL, ['TAG2', 'TAG3'], true);
   const tags = await subscriber.getTagsByUser(process.env.LIST_ID, process.env.API_EMAIL);
   t.ok(tags.includes('TAG1'));
   t.ok(tags.includes('TAG2'));
@@ -154,12 +154,31 @@ test('add tags for an email and get back by user', async (t) => {
   t.end();
 });
 
-test('remove tags for an email and get bac by user', async (t) => {
+test('remove tags for an email and get back by user', async (t) => {
   const subscriber = new Subscribe(process.env.API_KEY);
   await subscriber.removeTags(process.env.LIST_ID, process.env.API_EMAIL, ['TAG2']);
   const tags = await subscriber.getTagsByUser(process.env.LIST_ID, process.env.API_EMAIL);
   t.ok(tags.includes('TAG1'));
   t.notOk(tags.includes('TAG2'));
   t.ok(tags.includes('TAG3'));
+  t.end();
+});
+
+test('do not create new tags unless specified', async (t) => {
+  const subscriber = new Subscribe(process.env.API_KEY);
+  try {
+    // 'TAG2' should not exist at this point:
+    await subscriber.assignTagsToUser(process.env.LIST_ID, process.env.API_EMAIL, ['TAG1', 'TAG2']);
+  } catch (e) {
+    return t.end();
+  }
+  t.fail();
+});
+
+test('createTag', async (t) => {
+  const subscriber = new Subscribe(process.env.API_KEY);
+  await subscriber.createTag(process.env.LIST_ID, 'TAG2', process.env.API_EMAIL);
+  const tags = await subscriber.getTagsByUser(process.env.LIST_ID, process.env.API_EMAIL);
+  t.ok(tags.includes('TAG2'));
   t.end();
 });
