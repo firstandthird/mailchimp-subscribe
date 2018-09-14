@@ -166,7 +166,7 @@ class MailchimpSubscribe {
   }
 
   getExistingTags(listId) {
-    return this.request(`/lists/${listId}/segments`, 'GET', {});
+    return this.request(`/lists/${listId}/segments?count=100`, 'GET', {});
   }
 
   createTag(listId, tag, email) {
@@ -178,6 +178,9 @@ class MailchimpSubscribe {
   }
 
   async assignTagsToUser(listId, email, tagsArray, createIfNotExists = false) {
+    // Filter out empty items
+    tagsArray = tagsArray.filter(String);
+
     const existingTagList = await this.getExistingTags(listId);
     // make sure all tags exist:
     const existingTags = [];
